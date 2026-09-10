@@ -8,7 +8,7 @@ base_url: "https://api.deepseek.com/v1"   # OpenAI 兼容端点，stub 模式忽
 api_key_env: "LLM_API_KEY"                # 密钥只从环境变量读，不入库
 model: "deepseek-v4-flash"
 temperature: 0.2
-timeout_s: 20
+timeout_s: 90
 
 ask_retries: 2          # 畸形/非法输出纠错重问次数（超出 → 随机合法格兜底）
 

@@ -17,10 +17,25 @@ import json
 import os
 import random
 import re
+import time
 
 import requests
 
 from decision.solver import board_dims
+
+_TRACE_PATH = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), "scripts", "_llm_trace.log")
+
+
+def _trace(msg: str) -> None:
+    """实时输出 LLM 交互轨迹：stdout 即时刷新 + 追加写 _llm_trace.log。"""
+    line = f"[llm {time.strftime('%H:%M:%S')}] {msg}"
+    print(line, flush=True)
+    try:
+        with open(_TRACE_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except OSError:
+        pass
 
 ACTION_RE = re.compile(r"\{[^{}]*\}", re.S)
 
@@ -121,14 +136,24 @@ class OpenAIClient:
         pass
 
     def complete(self, messages: list[dict]) -> str:
-        resp = requests.post(
-            self.url,
-            headers={"Authorization": f"Bearer {self.key}"},
-            json={"model": self.model, "temperature": self.temperature,
-                  "messages": messages},
-            timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"] or ""
+        prompt_chars = sum(len(m["content"]) for m in messages)
+        t0 = time.monotonic()
+        _trace(f"ask model={self.model} prompt_chars={prompt_chars}")
+        try:
+            resp = requests.post(
+                self.url,
+                headers={"Authorization": f"Bearer {self.key}"},
+                json={"model": self.model, "temperature": self.temperature,
+                      "messages": messages},
+                timeout=self.timeout)
+            resp.raise_for_status()
+            raw = resp.json()["choices"][0]["message"]["content"] or ""
+        except Exception as e:
+            _trace(f"error {type(e).__name__}: {e} "
+                   f"({time.monotonic() - t0:.1f}s)")
+            raise
+        _trace(f"reply ({time.monotonic() - t0:.1f}s): {raw[:300]!r}")
+        return raw
 
 
 class StubClient:
