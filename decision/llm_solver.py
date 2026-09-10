@@ -91,6 +91,11 @@ def serialize_board(cells: list[dict], mines_left: int) -> str:
     for r in range(rows):
         lines.append(f"r{r} " + " ".join(sym[(c, r)] for c in range(cols)))
     lines.append("图例：#=未翻开 F=旗 ?=问号 .=周围无雷 数字=周围雷数")
+    # 非思考模式下模型无法可靠完成"坐标→棋面字符"对位（实测 0/5 合法），
+    # 附未翻开格坐标清单将其降级为查表（实测 3/3 合法），省去万级思维链 token
+    covered = [(c, r) for r in range(rows) for c in range(cols)
+               if sym[(c, r)] == "#"]
+    lines.append(f"未翻开格坐标清单（只能从这里选）：{covered}")
     return "\n".join(lines)
 
 
@@ -129,6 +134,9 @@ class OpenAIClient:
         self.model = cfg["model"]
         self.temperature = cfg.get("temperature", 0.2)
         self.timeout = cfg.get("timeout_s", 20)
+        # deepseek-v4 系为思考型模型，实战棋面思维链可达 1 万+ token/次；
+        # thinking=disabled 时请求体注入 {"type":"disabled"} 关闭长考（省 ~95% token 与延迟）
+        self.disable_thinking = cfg.get("thinking", "disabled") != "on"
         self.history: list[str] = []      # 最近 3 步动作+结果（solve 维护）
         self.last_action: dict | None = None
 
@@ -140,11 +148,14 @@ class OpenAIClient:
         t0 = time.monotonic()
         _trace(f"ask model={self.model} prompt_chars={prompt_chars}")
         try:
+            body: dict = {"model": self.model, "temperature": self.temperature,
+                          "messages": messages}
+            if self.disable_thinking:
+                body["thinking"] = {"type": "disabled"}
             resp = requests.post(
                 self.url,
                 headers={"Authorization": f"Bearer {self.key}"},
-                json={"model": self.model, "temperature": self.temperature,
-                      "messages": messages},
+                json=body,
                 timeout=self.timeout)
             resp.raise_for_status()
             raw = resp.json()["choices"][0]["message"]["content"] or ""
