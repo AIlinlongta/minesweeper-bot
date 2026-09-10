@@ -128,12 +128,16 @@ def read_mines_counter(frame: np.ndarray, anchor: dict | None = None) -> int | N
 
 def reconcile(board: list[dict], counter_read: int | None,
               mines_total: int) -> bool:
-    """对账公式：mines_total - flag数 == counter_read（§4.4b）。
-    踩雷不改变 LED 读数（仅落旗才回退），故不对死盘 mine/mine_red 扣减。"""
+    """对账公式：mines_total - flag数 - mine_cross数 == counter_read（§4.4b）。
+
+    LED 读数只随落旗动作递减（不分旗对错）；踩雷不改变读数。死盘上错旗
+    被游戏渲染为 mine_cross，需一并扣减；对局中/胜局 mine_cross=0，
+    公式退化为 mines_total - flag数 == counter_read。"""
     if counter_read is None:
         return False
     flags = sum(1 for c in board if c["state"] == "flag")
-    return mines_total - flags == counter_read
+    cross = sum(1 for c in board if c["state"] == "mine_cross")
+    return mines_total - flags - cross == counter_read
 
 
 _LOST_STATES = {"mine", "mine_red", "mine_cross"}
