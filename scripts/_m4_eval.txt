@@ -1,57 +1,78 @@
 [boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
-[reconcile] perceive mismatch: counter=7 flags=0 covered=44
-[reconcile] foreground mismatch: counter=7 flags=0 covered=44
-[run 1] scene=lost cycles=12
-[report] run 1: lost cycles=12 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=10 flags=0 covered=68
-[reconcile] foreground mismatch: counter=10 flags=0 covered=68
-[run 2] scene=lost cycles=5
-[report] run 2: lost cycles=5 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=10 flags=0 covered=37
-[reconcile] foreground mismatch: counter=10 flags=0 covered=37
-[run 3] scene=lost cycles=7
-[report] run 3: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=8 flags=0 covered=46
-[reconcile] foreground mismatch: counter=8 flags=0 covered=46
+[run 1] scene=lost cycles=5
+[report] run 1: lost cycles=5 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=lost cycles=7
+[report] run 2: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=lost cycles=8
+[report] run 3: lost cycles=8 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
 [run 4] scene=lost cycles=10
-[report] run 4: lost cycles=10 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=10 flags=0 covered=17
-[reconcile] foreground mismatch: counter=10 flags=0 covered=17
-[run 5] scene=lost cycles=3
-[report] run 5: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=10 flags=0 covered=70
-[reconcile] foreground mismatch: counter=10 flags=0 covered=70
-[run 6] scene=lost cycles=3
-[report] run 6: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=10 flags=0 covered=9
-[reconcile] foreground mismatch: counter=10 flags=0 covered=9
-[run 7] scene=lost cycles=7
-[report] run 7: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[reconcile] perceive mismatch: counter=9 flags=0 covered=31
-[reconcile] foreground mismatch: counter=9 flags=0 covered=31
-[run 8] scene=lost cycles=4
-[report] run 8: lost cycles=4 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
-[run 9] cycle error x1: inject not effective at {'c': 8, 'r': 6}
-[run 9] window lost -> relaunch
-[run 9] cycle error x1: inject not effective at {'c': 7, 'r': 7}
-[run 9] window lost -> relaunch
-[run 9] cycle error x1: 启动后仍找不到窗口
-[run 9] window lost -> relaunch
-[report] run 9: error cycles=13 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[report] run 4: lost cycles=10 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 5] scene=lost cycles=8
+[report] run 5: lost cycles=8 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 6] scene=lost cycles=6
+[report] run 6: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 7] scene=lost cycles=4
+[report] run 7: lost cycles=4 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 8] scene=lost cycles=10
+[report] run 8: lost cycles=10 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 9] scene=lost cycles=7
+[report] run 9: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 10] scene=lost cycles=5
+[report] run 10: lost cycles=5 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 11] scene=lost cycles=7
+[report] run 11: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 12] scene=lost cycles=7
+[report] run 12: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 13] scene=lost cycles=3
+[report] run 13: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 14] scene=lost cycles=6
+[report] run 14: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 15] scene=lost cycles=6
+[report] run 15: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 16] scene=lost cycles=8
+[report] run 16: lost cycles=8 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 17] scene=lost cycles=4
+[report] run 17: lost cycles=4 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 18] scene=lost cycles=3
+[report] run 18: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 19] scene=lost cycles=7
+[report] run 19: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 20] scene=lost cycles=9
+[report] run 20: lost cycles=9 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
 [boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
 
 === m4 acceptance (LLM closed-loop, stub) ===
-[A] settled 8/20 all won/lost: FAIL
-[B] llm_rate=1.0000 (asked=62 invalid=4 fallback=0 actions=64) >= 0.95: PASS
-[D] reconcile_fail total=8: FAIL
-    run  1: lost    cycles= 12 asked= 11 invalid=  0 fallback= 0 rec_fail=1
-    run  2: lost    cycles=  5 asked=  5 invalid=  1 fallback= 0 rec_fail=1
-    run  3: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=1
-    run  4: lost    cycles= 10 asked= 10 invalid=  1 fallback= 0 rec_fail=1
-    run  5: lost    cycles=  3 asked=  3 invalid=  1 fallback= 0 rec_fail=1
-    run  6: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=1
-    run  7: lost    cycles=  7 asked=  7 invalid=  1 fallback= 0 rec_fail=1
-    run  8: lost    cycles=  4 asked=  3 invalid=  0 fallback= 0 rec_fail=1
-    run  9: error   cycles= 13 asked= 15 invalid=  0 fallback= 0 rec_fail=0
+[A] settled 20/20 all won/lost: PASS
+[B] llm_rate=1.0000 (asked=114 invalid=4 fallback=0 actions=130) >= 0.95: PASS
+[D] reconcile_fail total=0: PASS
+    run  1: lost    cycles=  5 asked=  4 invalid=  0 fallback= 0 rec_fail=0
+    run  2: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run  3: lost    cycles=  8 asked=  8 invalid=  1 fallback= 0 rec_fail=0
+    run  4: lost    cycles= 10 asked= 10 invalid=  1 fallback= 0 rec_fail=0
+    run  5: lost    cycles=  8 asked=  7 invalid=  0 fallback= 0 rec_fail=0
+    run  6: lost    cycles=  6 asked=  6 invalid=  1 fallback= 0 rec_fail=0
+    run  7: lost    cycles=  4 asked=  3 invalid=  0 fallback= 0 rec_fail=0
+    run  8: lost    cycles= 10 asked=  9 invalid=  0 fallback= 0 rec_fail=0
+    run  9: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run 10: lost    cycles=  5 asked=  4 invalid=  0 fallback= 0 rec_fail=0
+    run 11: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run 12: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run 13: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=0
+    run 14: lost    cycles=  6 asked=  5 invalid=  0 fallback= 0 rec_fail=0
+    run 15: lost    cycles=  6 asked=  5 invalid=  0 fallback= 0 rec_fail=0
+    run 16: lost    cycles=  8 asked=  8 invalid=  1 fallback= 0 rec_fail=0
+    run 17: lost    cycles=  4 asked=  3 invalid=  0 fallback= 0 rec_fail=0
+    run 18: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=0
+    run 19: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run 20: lost    cycles=  9 asked=  8 invalid=  0 fallback= 0 rec_fail=0
 [boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[run 1] scene=lost cycles=6
+[report] run 1: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=lost cycles=6
+[report] run 2: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=lost cycles=6
+[report] run 3: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
 [boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+[C] pressure (stub_error_rate=0.5) settled 3/3 llm_rate=1.0000 (asked=21 fallback=0): PASS (info)
+eval_m4: PASS
