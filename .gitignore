@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# 工作区/会话元数据
+.workbuddy/
+
+# 运行产物（FrameState JSONL 等逐局日志）
+scripts/_m3_frames/
+scripts/_m4_frames/
+
+# 本地备份快照
+_backup/

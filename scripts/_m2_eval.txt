@@ -1,0 +1,12 @@
+m2 eval start 2026-09-10 11:18:35
+[M2] 9x9/10 games=500 seed=20260909 time=7.86s
+[M2] status={'win': 442, 'guess': 58}
+[M2] win steps min/avg/max = 5/19.0/40
+[M2] guess reasons={'guess_tie': 52, 'prob_min': 6} certainty min/avg=0.500/0.795
+[M2] 可解局 442/500 全部 100% 全解 (opened == 71)
+[SMOKE] 16x16/40 games=50 seed=20260910 time=8.60s
+[SMOKE] status={'win': 36, 'guess': 14}
+[SMOKE] win steps min/avg/max = 56/79.9/124
+[SMOKE] guess reasons={'guess_tie': 14} certainty min/avg=0.500/0.710
+[SMOKE] 信息性冒烟：status 含 win/guess 之外即提示（不计入验收）
+OVERALL: PASS

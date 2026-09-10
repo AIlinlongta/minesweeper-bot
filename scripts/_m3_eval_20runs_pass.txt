@@ -1,0 +1,70 @@
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[run 1] scene=won cycles=25
+[report] run 1: won cycles=25 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.9782608695652174
+[run 2] scene=won cycles=24
+[report] run 2: won cycles=24 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=won cycles=21
+[report] run 3: won cycles=21 guess_ties=3 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 4] scene=lost cycles=26
+[report] run 4: lost cycles=26 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.5
+[run 5] scene=won cycles=16
+[report] run 5: won cycles=16 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 6] scene=won cycles=28
+[report] run 6: won cycles=28 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 7] scene=won cycles=10
+[report] run 7: won cycles=10 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 8] scene=won cycles=28
+[report] run 8: won cycles=28 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 9] scene=lost cycles=3
+[report] run 9: lost cycles=3 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 10] scene=won cycles=19
+[report] run 10: won cycles=19 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 11] scene=won cycles=25
+[report] run 11: won cycles=25 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 12] scene=won cycles=20
+[report] run 12: won cycles=20 guess_ties=1 prob_min=1 reconcile_fail=0 certainty_min=0.9594594594594594
+[run 13] scene=won cycles=31
+[report] run 13: won cycles=31 guess_ties=3 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 14] scene=won cycles=22
+[report] run 14: won cycles=22 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 15] scene=won cycles=26
+[report] run 15: won cycles=26 guess_ties=3 prob_min=0 reconcile_fail=0 certainty_min=0.8961038961038961
+[run 16] scene=won cycles=31
+[report] run 16: won cycles=31 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 17] scene=lost cycles=27
+[report] run 17: lost cycles=27 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.5
+[run 18] scene=won cycles=10
+[report] run 18: won cycles=10 guess_ties=1 prob_min=0 reconcile_fail=0 certainty_min=0.8831168831168831
+[run 19] scene=won cycles=30
+[report] run 19: won cycles=30 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 20] scene=won cycles=28
+[report] run 20: won cycles=28 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+=== m3 acceptance (§6.2) ===
+[A] settled 20/20 all won/lost: PASS
+[B] win_rate=0.85 (17/20) >= 0.80: PASS
+[C] solvable games n=8 solved=8: PASS
+[D] reconcile_fail total=0: PASS
+    run  1: won  cycles= 25 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run  2: won  cycles= 24 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run  3: won  cycles= 21 guess=3 prob_min=0 rec_fail=0 first=first_corner
+    run  4: lost cycles= 26 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run  5: won  cycles= 16 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run  6: won  cycles= 28 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run  7: won  cycles= 10 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run  8: won  cycles= 28 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run  9: lost cycles=  3 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run 10: won  cycles= 19 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run 11: won  cycles= 25 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run 12: won  cycles= 20 guess=1 prob_min=1 rec_fail=0 first=first_corner
+    run 13: won  cycles= 31 guess=3 prob_min=0 rec_fail=0 first=first_corner
+    run 14: won  cycles= 22 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run 15: won  cycles= 26 guess=3 prob_min=0 rec_fail=0 first=first_corner
+    run 16: won  cycles= 31 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run 17: lost cycles= 27 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run 18: won  cycles= 10 guess=1 prob_min=0 rec_fail=0 first=first_corner
+    run 19: won  cycles= 30 guess=0 prob_min=0 rec_fail=0 first=first_corner
+    run 20: won  cycles= 28 guess=0 prob_min=0 rec_fail=0 first=first_corner
+report: {"runs": 20, "won": 17, "won_rate": 0.85, "solved_all_solvable": true}
+eval_m3: PASS -> D:\workbuddy\projects\minesweeper-bot\scripts\_m3_eval.txt

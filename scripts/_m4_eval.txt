@@ -1,0 +1,57 @@
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[reconcile] perceive mismatch: counter=7 flags=0 covered=44
+[reconcile] foreground mismatch: counter=7 flags=0 covered=44
+[run 1] scene=lost cycles=12
+[report] run 1: lost cycles=12 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=10 flags=0 covered=68
+[reconcile] foreground mismatch: counter=10 flags=0 covered=68
+[run 2] scene=lost cycles=5
+[report] run 2: lost cycles=5 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=10 flags=0 covered=37
+[reconcile] foreground mismatch: counter=10 flags=0 covered=37
+[run 3] scene=lost cycles=7
+[report] run 3: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=8 flags=0 covered=46
+[reconcile] foreground mismatch: counter=8 flags=0 covered=46
+[run 4] scene=lost cycles=10
+[report] run 4: lost cycles=10 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=10 flags=0 covered=17
+[reconcile] foreground mismatch: counter=10 flags=0 covered=17
+[run 5] scene=lost cycles=3
+[report] run 5: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=10 flags=0 covered=70
+[reconcile] foreground mismatch: counter=10 flags=0 covered=70
+[run 6] scene=lost cycles=3
+[report] run 6: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=10 flags=0 covered=9
+[reconcile] foreground mismatch: counter=10 flags=0 covered=9
+[run 7] scene=lost cycles=7
+[report] run 7: lost cycles=7 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[reconcile] perceive mismatch: counter=9 flags=0 covered=31
+[reconcile] foreground mismatch: counter=9 flags=0 covered=31
+[run 8] scene=lost cycles=4
+[report] run 8: lost cycles=4 guess_ties=0 prob_min=0 reconcile_fail=1 certainty_min=1.0
+[run 9] cycle error x1: inject not effective at {'c': 8, 'r': 6}
+[run 9] window lost -> relaunch
+[run 9] cycle error x1: inject not effective at {'c': 7, 'r': 7}
+[run 9] window lost -> relaunch
+[run 9] cycle error x1: 启动后仍找不到窗口
+[run 9] window lost -> relaunch
+[report] run 9: error cycles=13 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+=== m4 acceptance (LLM closed-loop, stub) ===
+[A] settled 8/20 all won/lost: FAIL
+[B] llm_rate=1.0000 (asked=62 invalid=4 fallback=0 actions=64) >= 0.95: PASS
+[D] reconcile_fail total=8: FAIL
+    run  1: lost    cycles= 12 asked= 11 invalid=  0 fallback= 0 rec_fail=1
+    run  2: lost    cycles=  5 asked=  5 invalid=  1 fallback= 0 rec_fail=1
+    run  3: lost    cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=1
+    run  4: lost    cycles= 10 asked= 10 invalid=  1 fallback= 0 rec_fail=1
+    run  5: lost    cycles=  3 asked=  3 invalid=  1 fallback= 0 rec_fail=1
+    run  6: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=1
+    run  7: lost    cycles=  7 asked=  7 invalid=  1 fallback= 0 rec_fail=1
+    run  8: lost    cycles=  4 asked=  3 invalid=  0 fallback= 0 rec_fail=1
+    run  9: error   cycles= 13 asked= 15 invalid=  0 fallback= 0 rec_fail=0
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}

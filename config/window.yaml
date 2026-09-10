@@ -1,0 +1,18 @@
+# window.yaml — 窗口路由配置（实测回填 2026-09-08，中文版 winmine.exe）
+# 按开发设计 §三.3.2 使用；不含固定 board_offset / cell_px（由 calibrate.py 运行时输出）。
+
+exe_path: "D:\\workbuddy\\projects\\minesweeper-bot\\apps\\winmine.exe"
+
+# 多路找窗：类名（主）→ 标题兜底 → 客户区尺寸特征
+class_name: "扫雷"                           # 中文版实测类名；韩文版为 "지뢰 찾기"，英文原版为 "Minesweeper"
+title_fallback: ["扫雷", "지뢰 찾기", "Minesweeper"]
+client_size_hint: { "w": 164, "h": 207 }   # 初级客户区实测（自校准后回填，仅作兜底特征）
+
+bind_pid: null                             # bot 自启动场景用 Popen pid 绑定（最稳）
+base_difficulty: beginner                  # 初级 9×9 起步
+poll_interval_s: 2
+capture_backend: mss
+input_backend: pydirectinput
+
+# 数字识别：模板匹配（perception/templates/，源自 winmine.exe 位图资源）；
+# OCR/Tesseract 已于 2026-09-09 移除（模板全类覆盖，OCR 为错误来源）。
