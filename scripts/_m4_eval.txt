@@ -1,15 +1,48 @@
 [boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
-[run 1] scene=lost cycles=3
-[report] run 1: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 1] scene=won cycles=19
+[report] run 1: won cycles=19 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=lost cycles=3
+[report] run 2: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=won cycles=10
+[report] run 3: won cycles=10 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 4] scene=won cycles=19
+[report] run 4: won cycles=19 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 5] scene=won cycles=15
+[report] run 5: won cycles=15 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 6] scene=won cycles=13
+[report] run 6: won cycles=13 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 7] scene=won cycles=7
+[report] run 7: won cycles=7 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 8] scene=won cycles=10
+[report] run 8: won cycles=10 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 9] scene=won cycles=12
+[report] run 9: won cycles=12 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 10] scene=won cycles=12
+[report] run 10: won cycles=12 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
 [boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
 
 === m4 acceptance (LLM closed-loop, stub) ===
-[A] settled 1/1 all won/lost: PASS
-[B] llm_rate=1.0000 (asked=2 invalid=0 fallback=0 actions=3) >= 0.95: PASS
+[A] settled 10/10 all won/lost: PASS
+[B] llm_rate=1.0000 (asked=110 invalid=0 fallback=0 actions=120) >= 0.95: PASS
 [D] reconcile_fail total=0: PASS
-    run  1: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=0
+    run  1: won     cycles= 19 asked= 18 invalid=  0 fallback= 0 rec_fail=0
+    run  2: lost    cycles=  3 asked=  2 invalid=  0 fallback= 0 rec_fail=0
+    run  3: won     cycles= 10 asked=  9 invalid=  0 fallback= 0 rec_fail=0
+    run  4: won     cycles= 19 asked= 18 invalid=  0 fallback= 0 rec_fail=0
+    run  5: won     cycles= 15 asked= 14 invalid=  0 fallback= 0 rec_fail=0
+    run  6: won     cycles= 13 asked= 12 invalid=  0 fallback= 0 rec_fail=0
+    run  7: won     cycles=  7 asked=  6 invalid=  0 fallback= 0 rec_fail=0
+    run  8: won     cycles= 10 asked=  9 invalid=  0 fallback= 0 rec_fail=0
+    run  9: won     cycles= 12 asked= 11 invalid=  0 fallback= 0 rec_fail=0
+    run 10: won     cycles= 12 asked= 11 invalid=  0 fallback= 0 rec_fail=0
 [boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[run 1] scene=won cycles=14
+[report] run 1: won cycles=14 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=won cycles=12
+[report] run 2: won cycles=12 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=lost cycles=3
+[report] run 3: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
 [boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
 
-[C] pressure (stub_error_rate=0.5) settled 0/0 llm_rate=1.0000 (asked=0 fallback=0): PASS (info)
+[C] pressure (stub_error_rate=0.5) settled 3/3 llm_rate=1.0000 (asked=26 fallback=0): PASS (info)
 eval_m4: PASS

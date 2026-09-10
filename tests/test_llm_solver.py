@@ -60,7 +60,30 @@ def test_serialize_grid():
 def test_parse_valid():
     cells = _board(["#1.", "#.."])
     a = llm_solver.parse_action('好的 {"type":"reveal","c":0,"r":0} 完毕', cells)
-    assert a == {"type": "reveal", "cell": {"c": 0, "r": 0}}
+    assert a == {"type": "reveal", "cells": [(0, 0)]}  # 旧 c/r 单格兼容
+
+
+def test_parse_cells_array():
+    cells = _board(["#1.", "#.."])
+    a = llm_solver.parse_action('{"type":"flag","cells":[[0,0],[0,1]]}', cells)
+    assert a == {"type": "flag", "cells": [(0, 0), (0, 1)]}
+    # dict 元素容错 {"c":..,"r":..}
+    a2 = llm_solver.parse_action(
+        '{"type":"reveal","cells":[{"c":0,"r":0}]}', cells)
+    assert a2 == {"type": "reveal", "cells": [(0, 0)]}
+
+
+def test_parse_cells_invalid():
+    cells = _board(["#1.", "#.."])
+    bad = [
+        '{"type":"reveal","cells":[]}',             # 空数组
+        '{"type":"reveal","cells":[[0]]}',          # 元素不是坐标对
+        '{"type":"reveal","cells":"x"}',            # 非数组（走旧协议缺字段）
+        '{"type":"reveal","cells":[[0,0],[5,5]]}',  # 混入越界格 → 整体无效
+        '{"type":"reveal","cells":[[0,0],[2,0]]}',  # 混入已翻开格 → 整体无效
+    ]
+    for t in bad:
+        assert llm_solver.parse_action(t, cells) is None, t
 
 
 def test_parse_invalid_cases():
@@ -141,6 +164,40 @@ def test_solve_flag_cap():
     assert out2["action"]["type"] == "reveal"
     assert out2["action"]["reason"] == "llm_fallback_random"
     assert out2["stats"]["fallback"] == 1
+
+
+# ---------------------------------------------------------------- 多格协议
+def test_solve_multi_flag():
+    cells = _board(["#1.", "#.."])  # covered：(0,0)、(0,1)
+    cl = FakeClient(['{"type":"flag","cells":[[0,0],[0,1]]}'])
+    out = llm_solver.solve(cells, 10, rng=random.Random(1), cfg=CFG, client=cl)
+    assert out["flags"] == [{"c": 0, "r": 0}, {"c": 0, "r": 1}]
+    assert out["cells"] == out["flags"]
+    assert out["action"]["cell"] == {"c": 0, "r": 0}  # 首格供反馈回灌
+    assert out["action"]["cells"] == out["flags"]
+
+
+def test_solve_multi_reveal():
+    cells = _board(["#1.", "#.."])
+    cl = FakeClient(['{"type":"reveal","cells":[[0,1],[0,0]]}'])
+    out = llm_solver.solve(cells, 10, rng=random.Random(1), cfg=CFG, client=cl)
+    assert out["cells"] == [{"c": 0, "r": 1}, {"c": 0, "r": 0}]
+    assert out["flags"] == []
+    assert out["action"]["cell"] == {"c": 0, "r": 1}
+
+
+def test_solve_multi_flag_cap():
+    cells = _board(["F1.", "#.."])  # 1 旗已有，雷上限 2 → 2 旗超限
+    cl = FakeClient(['{"type":"flag","cells":[[0,0],[0,1]]}'] * 3)
+    out = llm_solver.solve(cells, 2, rng=random.Random(1), cfg=CFG, client=cl)
+    assert out["stats"]["fallback"] == 1  # 重问耗尽 → 兜底 reveal
+
+
+def test_solve_fallback_cells():
+    cells = _board(["#1.", "#.."])
+    cl = FakeClient([])  # 永远垃圾
+    out = llm_solver.solve(cells, 10, rng=random.Random(1), cfg=CFG, client=cl)
+    assert out["cells"] == [out["action"]["cell"]]  # 兜底单格也走 cells 协议
 
 
 # ---------------------------------------------------------------- 历史

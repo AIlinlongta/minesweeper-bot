@@ -1,0 +1,21 @@
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[run 1] scene=lost cycles=6
+[report] run 1: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=lost cycles=6
+[report] run 2: lost cycles=6 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=lost cycles=3
+[report] run 3: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+=== m4 acceptance (LLM closed-loop, stub) ===
+[A] settled 3/3 all won/lost: PASS
+[B] llm_rate=1.0000 (asked=18 invalid=6 fallback=0 actions=15) >= 0.95: PASS
+[D] reconcile_fail total=0: PASS
+    run  1: lost    cycles=  6 asked=  5 invalid=  0 fallback= 0 rec_fail=0
+    run  2: lost    cycles=  6 asked= 10 invalid=  5 fallback= 0 rec_fail=0
+    run  3: lost    cycles=  3 asked=  3 invalid=  1 fallback= 0 rec_fail=0
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+[C] pressure (stub_error_rate=0.5) settled 0/0 llm_rate=1.0000 (asked=0 fallback=0): PASS (info)
+eval_m4: PASS

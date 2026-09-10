@@ -122,9 +122,16 @@ def boot(cfg) -> dict:
     try:
         calib = _calib_16x(win)
     except calibrate.CalibrateError:
-        _kill(win)
-        win = _launch_window(cfg)
-        calib = _calib_16x(win)  # 再失败 → CalibrateError 上抛致命
+        # 遮挡/出屏自愈：移回可见区+前台化后重校准一次（bring_to_foreground
+        # 内含 ensure_on_screen），仍败才冷重启——减少粗暴重启
+        windowing.bring_to_foreground(win["hwnd"])
+        time.sleep(0.5)
+        try:
+            calib = _calib_16x(win)
+        except calibrate.CalibrateError:
+            _kill(win)
+            win = _launch_window(cfg)
+            calib = _calib_16x(win)  # 再失败 → CalibrateError 上抛致命
     return {"win": win, "calib": calib, "cfg": cfg}
 
 
@@ -191,6 +198,13 @@ def _feedback_changed(win, calib, kind, c, r) -> bool:
     windowing.bring_to_foreground(win["hwnd"])
     time.sleep(0.25)
     return check()
+
+
+def _cell_covered(win, calib, c, r) -> bool:
+    """单格分类：是否仍为 covered（LLM 多格连开前检查，跳过已展开格）。"""
+    frame = grab_checked(win)
+    cell = grid_perception.slice_cell(frame, calib, c, r)
+    return grid_perception.classify_cell(cell)["state"] == "covered"
 
 
 def _is_fresh(board: list[dict]) -> bool:
@@ -325,6 +339,10 @@ def play_one_game(ctx, run_id: int, rng: random.Random, log=print) -> dict:
                 action.flag(fc["c"], fc["r"], win, calib)
             kind = act["type"]
             c0, r0 = act["cell"]["c"], act["cell"]["r"]
+            # LLM 多格 reveal 连开（步骤3 一次多安全格）：首格之外逐格点击，
+            # 点击前确认仍 covered（前格 0 连片可能已展开后格）；不逐格强校验
+            # 反馈，漏开的下一周期重感知自然补上
+            extra = (act.get("cells") or [])[1:] if kind == "reveal" else []
             # 注入 + 周期内重试：失败 → 前台化 → 重点击（瞬时丢点击自愈，
             # 不升级 §5.8；kind==flag 时 cell==flags[0]，上方已落）
             for attempt in range(INJECT_TRIES):
@@ -340,6 +358,10 @@ def play_one_game(ctx, run_id: int, rng: random.Random, log=print) -> dict:
                     break
             else:
                 raise RuntimeError(f"inject not effective at {act['cell']}")
+            for x in extra:  # 多格连开（flag 类型无 extra）
+                if _cell_covered(win, calib, x["c"], x["r"]):
+                    action.reveal(x["c"], x["r"], win, calib)
+                    time.sleep(POLL)
 
             frame_id += 1
             with open(frames_path, "a", encoding="utf-8") as f:

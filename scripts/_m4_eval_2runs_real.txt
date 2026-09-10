@@ -1,0 +1,2 @@
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}

@@ -198,15 +198,38 @@ def get_window_rect(hwnd: int) -> dict:
     return {"x": l, "y": t, "w": r - l, "h": b - t}
 
 
+def ensure_on_screen(hwnd: int, margin: int = 8) -> bool:
+    """窗口矩形不完全落在主屏内时，移回主屏可见区（返回是否发生移动）。
+
+    RDP 重连/分辨率变化会把窗口留在屏幕外坐标——TOPMOST 置顶救不了
+    "看不见的窗口"（截图区域没有棋盘 → detect_board 0×0 → cell_size=0）。
+    """
+    try:
+        sw = ctypes.windll.user32.GetSystemMetrics(0)   # SM_CXSCREEN
+        sh = ctypes.windll.user32.GetSystemMetrics(1)   # SM_CYSCREEN
+        wl, wt, wr, wb = win32gui.GetWindowRect(hwnd)
+        if wl >= margin and wt >= margin \
+                and wr <= sw - margin and wb <= sh - margin:
+            return False
+        nx = min(max(wl, margin), max(margin, sw - (wr - wl) - margin))
+        ny = min(max(wt, margin), max(margin, sh - (wb - wt) - margin))
+        win32gui.SetWindowPos(hwnd, 0, nx, ny, 0, 0,
+                              win32con.SWP_NOSIZE | win32con.SWP_NOZORDER)
+        return True
+    except Exception:
+        return False
+
+
 def bring_to_foreground(hwnd: int) -> bool:
     """前台化 + 置顶（返回是否真正成为前台窗口）。
 
     SetForegroundWindow 有系统级限制（后台进程可能被拒），
     HWND_TOPMOST 置顶并保持（截图/点击都作用于最上层窗口；
     若置顶后回落 NOTOPMOST，仍处 TOPMOST 的遮挡窗会再次盖住），
-    再尝试前台化并用 GetForegroundWindow 校验。
+    先把跑出屏幕的窗口移回可见区，再尝试前台化并校验。
     """
     try:
+        ensure_on_screen(hwnd)
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
         # 保持 TOPMOST：仅置顶一轮后落回 NOTOPMOST 会被仍处 TOPMOST 的
         # 遮挡窗（如置顶提示框）再次盖住，截图依旧污染。截图/点击型 bot

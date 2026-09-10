@@ -16,7 +16,6 @@
 import json
 import os
 import random
-import re
 import time
 
 import requests
@@ -37,11 +36,41 @@ def _trace(msg: str) -> None:
     except OSError:
         pass
 
-ACTION_RE = re.compile(r"\{[^{}]*\}", re.S)
+_JSON_DEC = json.JSONDecoder()
 
-SYSTEM_PROMPT = """你是谨慎的扫雷玩家，根据局面走一步。严格只输出一个 JSON 对象，
-格式：{"type":"reveal"或"flag","c":<列>,"r":<行>}（c/r 为整数坐标；type=reveal
-翻开该格，type=flag 在你确信是雷时插旗）。除该 JSON 外不要输出任何其他文字。"""
+
+def _scan_jsons(text: str):
+    """从文本扫描所有 JSON 对象（支持嵌套花括号，regex [^{}] 不支持）。
+
+    raw_decode 从指定位置解析一个完整 JSON 值，返回 (obj, end_index)。"""
+    i, n = 0, len(text or "")
+    while i < n:
+        if text[i] != "{":
+            i += 1
+            continue
+        try:
+            d, end = _JSON_DEC.raw_decode(text[i:])
+            if isinstance(d, dict):
+                yield d
+                i += end
+                continue
+        except json.JSONDecodeError:
+            pass
+        i += 1
+
+SYSTEM_PROMPT = """你是谨慎的扫雷玩家，根据局面走棋。分析严格按 5 步依次进行：
+步骤1：列出所有已知数字格，及其相邻的未翻开格（对照未翻开格坐标清单）。
+步骤2：推导某未插旗格是否必然是雷——某数字周围未翻开格数等于其剩余雷数时，这些
+  格必然是雷；把找到的所有必然雷格一次全部输出：
+  {"type":"flag","cells":[[c,r],...]}，不再进行余下步骤。
+步骤3：推导是否存在【必然安全格】——某数字周围雷已全部标出时，其相邻未翻开格必
+  然安全；把所有必然安全格一次全部输出：
+  {"type":"reveal","cells":[[c,r],...]}，不再进行余下步骤。
+步骤4：若没有必然安全格，从清单中列出所有候选格。
+步骤5：在候选里选风险最低的一个，输出坐标：
+  {"type":"reveal","cells":[[c,r]]}。
+整个分析在内部完成，最后严格只输出一个 JSON 对象（所有动作统一用 cells 数组，
+坐标对 [c,r]）。除该 JSON 外不要输出任何其他文字。"""
 
 PROMPT_TMPL = """{history}当前局面：
 
@@ -99,27 +128,74 @@ def serialize_board(cells: list[dict], mines_left: int) -> str:
     return "\n".join(lines)
 
 
+def _extract_pairs(d: dict) -> list[tuple[int, int]] | None:
+    """动作 JSON → 坐标对列表（cells 数组新协议；c/r 单格旧协议兼容）。"""
+    if isinstance(d.get("cells"), list):
+        pairs: list[tuple[int, int]] = []
+        for p in d["cells"]:
+            if (isinstance(p, (list, tuple)) and len(p) == 2
+                    and all(isinstance(v, int) and not isinstance(v, bool)
+                            for v in p)):
+                pairs.append((p[0], p[1]))
+            elif (isinstance(p, dict)
+                  and isinstance(p.get("c"), int) and not isinstance(p.get("c"), bool)
+                  and isinstance(p.get("r"), int) and not isinstance(p.get("r"), bool)):
+                pairs.append((p["c"], p["r"]))
+            else:
+                return None
+        return pairs or None
+    c, r = d.get("c"), d.get("r")
+    if all(isinstance(v, int) and not isinstance(v, bool) for v in (c, r)):
+        return [(c, r)]
+    return None
+
+
 def parse_action(text: str, cells: list[dict]) -> dict | None:
     """从 LLM 回答提取第一个合法动作；无法解析/越界/非法状态 → None。
 
-    合法性：type ∈ {reveal, flag}；坐标为 int 且在盘内；目标格必须 covered。"""
+    合法性：type ∈ {reveal, flag}；坐标为 int 且在盘内；每格必须 covered。
+    返回 {"type", "cells": [(c, r), ...]}（cells 数组多格，c/r 单格转单元素）。"""
     index = {(x["c"], x["r"]): x for x in cells}
-    for blob in ACTION_RE.findall(text or ""):
-        try:
-            d = json.loads(blob)
-        except json.JSONDecodeError:
-            continue
-        t, c, r = d.get("type"), d.get("c"), d.get("r")
+    for d in _scan_jsons(text or ""):
+        t = d.get("type")
         if t not in ("reveal", "flag"):
             continue
-        if not all(isinstance(v, int) and not isinstance(v, bool) for v in (c, r)):
+        pairs = _extract_pairs(d)
+        if not pairs:
             continue
-        if (c, r) not in index:
+        if any(p not in index or index[p]["state"] != "covered"
+               for p in pairs):  # 只允许对未翻开格操作
             continue
-        if index[(c, r)]["state"] != "covered":  # 只允许对未翻开格操作
-            continue
-        return {"type": t, "cell": {"c": c, "r": r}}
+        return {"type": t, "cells": pairs}
     return None
+
+
+def _invalid_reason(raw: str, cells: list[dict]) -> str:
+    """从原始回复给出坐标级非法原因（供纠错重问；解析不出则给通用描述）。
+
+    实测教训（2026-09-11）：重问只说"无法解析出合法动作"且回灌错误回复时，
+    模型会稳定重复同一非法坐标直至兜底（run 2 invalid=12/fallback=4）。
+    必须点名错在哪格、为什么非法，且不回灌错误回复避免自我强化。"""
+    rows, cols = board_dims(cells)
+    index = {(x["c"], x["r"]): x for x in cells}
+    for d in _scan_jsons(raw or ""):
+        t = d.get("type")
+        if t not in ("reveal", "flag"):
+            return f"type={t!r} 非法（只能 reveal 或 flag）"
+        pairs = _extract_pairs(d)
+        if not pairs:
+            return ("cells 坐标对缺失/格式非法"
+                    "（应如 {\"type\":\"reveal\",\"cells\":[[c,r],...]}）")
+        for c, r in pairs:
+            if not (0 <= c < cols and 0 <= r < rows) or (c, r) not in index:
+                return f"坐标 ({c},{r}) 越界（盘面 {cols}x{rows}）"
+            st = index[(c, r)]["state"]
+            if st != "covered":
+                desc = "已插旗" if st == "flag" else "已翻开"
+                return (f"({c},{r}) 是{desc}格，未翻开格坐标清单里没有它——"
+                        f"必须且只能从清单里另选")
+        return f"动作 {t} 未通过校验"
+    return "未解析出 JSON 动作"
 
 
 class OpenAIClient:
@@ -134,9 +210,19 @@ class OpenAIClient:
         self.model = cfg["model"]
         self.temperature = cfg.get("temperature", 0.2)
         self.timeout = cfg.get("timeout_s", 20)
-        # deepseek-v4 系为思考型模型，实战棋面思维链可达 1 万+ token/次；
-        # thinking=disabled 时请求体注入 {"type":"disabled"} 关闭长考（省 ~95% token 与延迟）
-        self.disable_thinking = cfg.get("thinking", "disabled") != "on"
+        # deepseek-v4 系为思考型模型，实战棋面思维链可达 1 万+ token/次。
+        # thinking: disabled → 注入 {"type":"disabled"} 关闭长考（省 ~95% token 与延迟）
+        # thinking: on|adaptive → 开思考；reasoning_effort 档位限定深度
+        #   （2026-09-11 探针实测对 v4-flash 生效：low≈1.5k / high≈8k reasoning_tokens；
+        #    旧 budget_tokens 参数被 API 静默忽略，勿再使用）
+        # 注意：PyYAML(YAML 1.1) 把裸写 on/off 解析为布尔 True/False，须先归一化
+        # （实测教训：thinking: on 被读成 True → 请求体 {"type": true} → API 400）
+        th = cfg.get("thinking", "disabled")
+        if isinstance(th, bool):
+            th = "on" if th else "disabled"
+        self.disable_thinking = th == "disabled"
+        self.thinking_type = {"on": "enabled"}.get(th, th)
+        self.reasoning_effort = cfg.get("reasoning_effort")
         self.history: list[str] = []      # 最近 3 步动作+结果（solve 维护）
         self.last_action: dict | None = None
 
@@ -152,6 +238,10 @@ class OpenAIClient:
                           "messages": messages}
             if self.disable_thinking:
                 body["thinking"] = {"type": "disabled"}
+            else:
+                body["thinking"] = {"type": self.thinking_type}
+                if self.reasoning_effort:
+                    body["reasoning_effort"] = self.reasoning_effort
             resp = requests.post(
                 self.url,
                 headers={"Authorization": f"Bearer {self.key}"},
@@ -220,9 +310,10 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
           cfg: dict | None = None, client=None) -> dict:
     """LLM 决策后端，与 solver.solve 同契约。
 
-    返回 {"action", "flags", "tie_break": False,
+    返回 {"action", "flags", "cells", "tie_break": False,
           "stats": {"asked", "invalid", "fallback"}}。
-    flags 仅在动作类型为 flag 时含该格（主循环先落旗再反馈校验）。
+    action.cell 为首格（主循环反馈回灌主校验）；cells 为全部目标格（主循环
+    reveal 多格连开）；flags 仅在动作类型为 flag 时含全部旗格（先落旗再反馈）。
 
     消息结构：system 固定角色/JSON 约束 + user（历史 + 棋面 + 步法要求）。
     历史：最近 3 步动作与结果（落在 client.history，跨周期持久；client 无该
@@ -262,11 +353,12 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
     stats = {"asked": 0, "invalid": 0, "fallback": 0}
     parsed, last_err = None, ""
     for i in range(1 + int(cfg.get("ask_retries", 2))):
-        if i:  # 纠错重问
+        if i:  # 纠错重问：点名错在哪格/为什么（见 _invalid_reason docstring）
             messages.append({"role": "user",
-                             "content": f"你的上次输出无效（{last_err}）。请重新"
-                                        f"严格只输出一个 JSON 动作："
-                                        f'{{"type":"reveal"或"flag","c":<列>,"r":<行>}}'})
+                             "content": f"你的上次输出无效：{last_err}。请重新"
+                                        f"严格只输出一个 JSON 动作（统一 cells "
+                                        f'数组）：{{"type":"reveal"或"flag",'
+                                        f'"cells":[[c,r],...]}}'})
         stats["asked"] += 1
         try:
             raw = client.complete(messages)
@@ -278,30 +370,32 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
         parsed = parse_action(raw, cells)
         if parsed is None:
             stats["invalid"] += 1
-            last_err = "无法解析出合法动作"
-            messages.append({"role": "assistant", "content": raw[:200]})
-            continue
-        if parsed["type"] == "flag" and flags_now >= mines_total:
+            last_err = _invalid_reason(raw, cells)
+            continue  # 不回灌错误回复：模型会重复自己说过的坐标（自我强化）
+        if parsed["type"] == "flag" and \
+                flags_now + len(parsed["cells"]) > mines_total:
             stats["invalid"] += 1
-            last_err = "旗数已达雷数上限，不能继续插旗"
-            messages.append({"role": "assistant", "content": raw[:200]})
+            last_err = (f"旗数将达 {flags_now + len(parsed['cells'])} 超过雷数上限"
+                        f" {mines_total}，不能继续插旗")
             parsed = None
             continue
         break
     if parsed is None:  # 兜底：随机合法格（保证闭环不断）
         covered = [x for x in cells if x["state"] == "covered"]
         cell = rng.choice(covered)
-        parsed = {"type": "reveal", "cell": {"c": cell["c"], "r": cell["r"]}}
+        parsed = {"type": "reveal", "cells": [(cell["c"], cell["r"])]}
         stats["fallback"] += 1
         reason = "llm_fallback_random"
     else:
         reason = "llm"
-    act = {"type": parsed["type"], "cell": parsed["cell"],
+    # 兼容主循环旧契约：action.cell = 首格；flags = 全部 flag 格（dict 列表）
+    act_cells = [{"c": c, "r": r} for c, r in parsed["cells"]]
+    act = {"type": parsed["type"], "cell": act_cells[0], "cells": act_cells,
            "reason": reason, "certainty": 1.0}
-    flags = [parsed["cell"]] if parsed["type"] == "flag" else []
+    flags = act_cells if parsed["type"] == "flag" else []
     if hist is not None and hasattr(client, "last_action"):
         # 记录本动作，供下一周期结算结果（含兜底动作，历史须如实反映）
         client.last_action = {"type": act["type"],
                               "c": act["cell"]["c"], "r": act["cell"]["r"]}
-    return {"action": act, "flags": flags, "tie_break": False,
-            "stats": stats}
+    return {"action": act, "flags": flags, "cells": act_cells,
+            "tie_break": False, "stats": stats}

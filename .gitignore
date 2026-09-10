@@ -11,6 +11,7 @@ __pycache__/
 scripts/_m3_frames/
 scripts/_m4_frames/
 scripts/_llm_trace.log
+scripts/_llm_trace_prev.log
 
 # 本地备份快照
 _backup/
