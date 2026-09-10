@@ -9,6 +9,9 @@
 模式（config/llm.yaml brain 字段）：
   stub   离线桩（可注入畸形率联调重问/兜底路径，无需网络与密钥）
   openai OpenAI 兼容 /chat/completions（base_url + api_key_env + model）
+
+消息结构：system 固定角色+JSON 约束；user = 最近 3 步动作+结果的历史 + 棋面
+快照 + 步法要求。历史落在 client 实例上跨周期持久，新盘（全 covered）清空。
 """
 import json
 import os
@@ -21,14 +24,34 @@ from decision.solver import board_dims
 
 ACTION_RE = re.compile(r"\{[^{}]*\}", re.S)
 
-PROMPT_TMPL = """你是扫雷玩家，从当前局面走一步。
+SYSTEM_PROMPT = """你是谨慎的扫雷玩家，根据局面走一步。严格只输出一个 JSON 对象，
+格式：{"type":"reveal"或"flag","c":<列>,"r":<行>}（c/r 为整数坐标；type=reveal
+翻开该格，type=flag 在你确信是雷时插旗）。除该 JSON 外不要输出任何其他文字。"""
+
+PROMPT_TMPL = """{history}当前局面：
 
 {board}
 
 要求：
 - 只能对 #（未翻开）格操作：reveal 翻开它，或 flag 插旗（你确信是雷时）。
-- 一次只走一步，优先走你判断最安全的步。
-- 严格只输出一个 JSON 对象，格式：{{"type":"reveal"或"flag","c":<列>,"r":<行>}}"""
+- 一次只走一步，优先走你判断最安全的步。"""
+
+
+def _outcome(state: str) -> str:
+    """上一动作在当前盘面的落点结果（人读一句话）。"""
+    if state == "covered":
+        return "未生效（格仍为 #）"
+    if state == "flag":
+        return "旗已生效"
+    if state == "question":
+        return "旗被再次右键成问号"
+    if state == "mine_red":
+        return "踩雷出局"
+    if state == "0":
+        return "已翻开（空白）"
+    if state.isdigit():
+        return f"已翻开（显示{state}）"
+    return f"状态={state}"
 
 
 def serialize_board(cells: list[dict], mines_left: int) -> str:
@@ -89,8 +112,10 @@ class OpenAIClient:
         if not self.key:
             raise RuntimeError(f"environment variable {env} not set")
         self.model = cfg["model"]
-        self.temperature = cfg.get("temperature", 0.7)
+        self.temperature = cfg.get("temperature", 0.2)
         self.timeout = cfg.get("timeout_s", 20)
+        self.history: list[str] = []      # 最近 3 步动作+结果（solve 维护）
+        self.last_action: dict | None = None
 
     def observe(self, cells, mines_left) -> None:  # 真端点无需观察钩子
         pass
@@ -114,6 +139,8 @@ class StubClient:
         self.rng = rng
         self._cells: list[dict] = []
         self._flags: int = 0
+        self.history: list[str] = []      # solve 维护（桩不消费，仅为接口一致）
+        self.last_action: dict | None = None
 
     def observe(self, cells, mines_left) -> None:
         self._cells = cells
@@ -159,7 +186,11 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
 
     返回 {"action", "flags", "tie_break": False,
           "stats": {"asked", "invalid", "fallback"}}。
-    flags 仅在动作类型为 flag 时含该格（主循环先落旗再反馈校验）。"""
+    flags 仅在动作类型为 flag 时含该格（主循环先落旗再反馈校验）。
+
+    消息结构：system 固定角色/JSON 约束 + user（历史 + 棋面 + 步法要求）。
+    历史：最近 3 步动作与结果（落在 client.history，跨周期持久；client 无该
+    属性时退化为无历史——单测 FakeClient 路径）。新盘（全 covered）自动清空。"""
     rng = rng or random.Random()
     cfg = cfg or {}
     flags_now = sum(1 for x in cells if x["state"] == "flag")
@@ -168,7 +199,30 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
     if client is None:
         client = _get_client(cfg, rng)
     client.observe(cells, mines_left)
-    messages = [{"role": "user", "content": PROMPT_TMPL.format(board=board_txt)}]
+
+    # --- 历史维护：结算上一动作结果 + 新盘清空 ---
+    hist = getattr(client, "history", None)
+    if hist is None:
+        hist = []
+    else:
+        la = getattr(client, "last_action", None)
+        if all(x["state"] == "covered" for x in cells):
+            hist.clear()
+            client.last_action = None
+        elif la is not None:
+            cells_now = {(x["c"], x["r"]): x["state"] for x in cells}
+            hist.append(f"{la['type']}({la['c']},{la['r']}) → "
+                        f"{_outcome(cells_now.get((la['c'], la['r']), '?'))}")
+            del hist[:-3]
+            client.last_action = None
+    hist_txt = ""
+    if hist:
+        hist_txt = "最近动作与结果：\n" + "\n".join(f"- {h}" for h in hist) + "\n"
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",
+                 "content": PROMPT_TMPL.format(board=board_txt,
+                                               history=hist_txt)}]
     stats = {"asked": 0, "invalid": 0, "fallback": 0}
     parsed, last_err = None, ""
     for i in range(1 + int(cfg.get("ask_retries", 2))):
@@ -183,7 +237,7 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
         except Exception as e:  # 超时/网络：记一次无效，退回初始对话重问
             stats["invalid"] += 1
             last_err = f"请求异常 {type(e).__name__}"
-            messages = messages[:1]
+            messages = messages[:2]
             continue
         parsed = parse_action(raw, cells)
         if parsed is None:
@@ -209,5 +263,9 @@ def solve(cells: list[dict], mines_total: int, rng: random.Random | None = None,
     act = {"type": parsed["type"], "cell": parsed["cell"],
            "reason": reason, "certainty": 1.0}
     flags = [parsed["cell"]] if parsed["type"] == "flag" else []
+    if hist is not None and hasattr(client, "last_action"):
+        # 记录本动作，供下一周期结算结果（含兜底动作，历史须如实反映）
+        client.last_action = {"type": act["type"],
+                              "c": act["cell"]["c"], "r": act["cell"]["r"]}
     return {"action": act, "flags": flags, "tie_break": False,
             "stats": stats}

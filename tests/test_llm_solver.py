@@ -143,6 +143,32 @@ def test_solve_flag_cap():
     assert out2["stats"]["fallback"] == 1
 
 
+# ---------------------------------------------------------------- 历史
+def test_solve_history_persist():
+    class HistClient(FakeClient):
+        """带历史属性的桩（同 OpenAIClient/StubClient 接口）。"""
+
+        def __init__(self, replies):
+            super().__init__(replies)
+            self.history = []
+            self.last_action = None
+
+    cells = _board(["#1.", "#.."])
+    cl = HistClient(['{"type":"reveal","c":0,"r":0}'])
+    llm_solver.solve(cells, 10, rng=random.Random(1), cfg=CFG, client=cl)
+    assert cl.last_action == {"type": "reveal", "c": 0, "r": 0}
+    assert cl.history == []
+
+    cells[0]["state"], cells[0]["digit"] = "1", 1  # 主循环反馈：落点翻开显示1
+    cl.replies = ['{"type":"reveal","c":0,"r":1}']
+    out2 = llm_solver.solve(cells, 10, rng=random.Random(1), cfg=CFG, client=cl)
+    user_msg = cl.last_messages[1]["content"]  # [0]=system, [1]=user
+    assert "最近动作与结果" in user_msg
+    assert "reveal(0,0) → 已翻开（显示1）" in user_msg
+    assert cl.last_action == {"type": "reveal", "c": 0, "r": 1}
+    assert out2["stats"]["fallback"] == 0
+
+
 # ---------------------------------------------------------------- 桩模式
 def test_stub_mode_clean():
     cfg = {"ask_retries": 2, "brain": "stub", "stub_error_rate": 0.0,
