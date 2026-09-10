@@ -1,0 +1,35 @@
+m4 真端点验收存档（2026-09-10，deepseek-v4-flash，brain=openai）
+跑法: scripts/eval_m4.py --runs 3 --pressure-runs 0
+背景: 存根模式 20 局验收通过后，接入真 LLM 端点的闭环验证。
+诊断: 首跑 B 线挂（llm_rate=0.71, invalid=25/37）系读超时（timeout_s=20，
+      实测单次响应 15-99s）；格式零问题。超时放宽 90s 后复测全绿。
+原始输出（输出节选，[llm] 行为实时追踪逐条记录）:
+
+[boot] registry backup={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+[llm 14:36:42] ask model=deepseek-v4-flash prompt_chars=508
+[llm 14:36:45] reply (3.8s): '{"type":"reveal","c":4,"r":4}'
+[llm 14:36:46] ask model=deepseek-v4-flash prompt_chars=541
+[llm 14:37:41] reply (55.4s): '{"type":"reveal","c":5,"r":8}'
+[llm 14:38:24] ask model=deepseek-v4-flash prompt_chars=566
+[llm 14:38:24] reply (42.1s): '{"type":"reveal","c":6,"r":6}'
+（……中略，完整逐条见 _llm_trace.log 当时内容……）
+[run 1] scene=lost cycles=18
+[report] run 1: lost cycles=18 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 2] scene=won cycles=27
+[report] run 2: won cycles=27 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[run 3] scene=lost cycles=3
+[report] run 3: lost cycles=3 guess_ties=0 prob_min=0 reconcile_fail=0 certainty_min=1.0
+[boot] registry restored={'Difficulty': 3, 'Height': 9, 'Width': 9, 'Mines': 10}
+
+=== m4 acceptance (LLM closed-loop, stub) ===
+[A] settled 3/3 all won/lost: PASS
+[B] llm_rate=1.0000 (asked=46 invalid=1 fallback=0 actions=48) >= 0.95: PASS
+[D] reconcile_fail total=0: PASS
+    run  1: lost    cycles= 18 asked= 17 invalid=  0 fallback=  0 rec_fail=0
+    run  2: won     cycles= 27 asked= 27 invalid=  1 fallback=  0 rec_fail=0
+    run  3: lost    cycles=  3 asked=  2 invalid=  0 fallback=  0 rec_fail=0
+[C] pressure: 跳过（stub 专属，真端点无意义）: PASS (info)
+eval_m4: PASS
+
+观察: run 2 真胜局（27 周期全解）；开局稳定点中心(4,4)，中盘出现连续 8 旗
+试探性行为；延迟 2.4-99s/次（均值 ~45s），46 次调用约 2.5 万 token。

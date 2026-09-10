@@ -10,6 +10,7 @@ __pycache__/
 # 运行产物（FrameState JSONL 等逐局日志）
 scripts/_m3_frames/
 scripts/_m4_frames/
+scripts/_llm_trace.log
 
 # 本地备份快照
 _backup/
